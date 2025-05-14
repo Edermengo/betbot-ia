@@ -4,8 +4,8 @@ import os
 
 app = Flask(__name__)
 
-# Pegando a chave da variável de ambiente (segura)
-openai.api_key = os.environ.get("OPENAI_API_KEY")
+# Inicializa o cliente da OpenAI com a chave da variável de ambiente
+client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 @app.route("/webhook", methods=["POST"])
 def whatsapp_webhook():
@@ -23,7 +23,7 @@ def whatsapp_webhook():
     - Placar provável (se aplicável)
     """
 
-    resposta = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-4",
         messages=[
             {"role": "system", "content": "Você é o BetBot IA, especialista em futebol e apostas."},
@@ -33,13 +33,14 @@ def whatsapp_webhook():
         temperature=0.7
     )
 
-    mensagem = resposta.choices[0].message["content"]
+    mensagem = response.choices[0].message.content
 
     return f"""
     <Response>
         <Message>{mensagem}</Message>
     </Response>
     """, 200, {"Content-Type": "application/xml"}
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
